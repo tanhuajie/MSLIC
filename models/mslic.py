@@ -1,8 +1,7 @@
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
+import time
 
 from layers.extractor import MultiScaleExtractor, MultiScaleCombiner
 from transform.analysis import AnalysisTransform_L1, AnalysisTransform_L2, AnalysisTransform_L3, HyperAnalysis
@@ -10,91 +9,11 @@ from transform.synthesis import SynthesisTransform_L1, SynthesisTransform_L2, Sy
 from transform.entropy import EntropyParameters, LatentResidualPrediction
 
 from compressai.ans import BufferedRansEncoder, RansDecoder
-from compressai.models.utils import conv, deconv
+from compressai.ops import ste_round
 from compressai.entropy_models import EntropyBottleneck, GaussianConditional
 from compressai.models import CompressionModel
 
-SCALES_MIN = 0.11
-SCALES_MAX = 256
-SCALES_LEVELS = 64
-
-def get_scale_table(min=SCALES_MIN, max=SCALES_MAX, levels=SCALES_LEVELS):
-    return torch.exp(torch.linspace(math.log(min), math.log(max), levels))
-
-def ste_round(x: Tensor) -> Tensor:
-    return torch.round(x) - x.detach() + x
-
-def find_named_module(module, query):
-    return next((m for n, m in module.named_modules() if n == query), None)
-
-def find_named_buffer(module, query):
-    return next((b for n, b in module.named_buffers() if n == query), None)
-
-def _update_registered_buffer(
-    module,
-    buffer_name,
-    state_dict_key,
-    state_dict,
-    policy="resize_if_empty",
-    dtype=torch.int,
-):
-    new_size = state_dict[state_dict_key].size()
-    registered_buf = find_named_buffer(module, buffer_name)
-
-    if policy in ("resize_if_empty", "resize"):
-        if registered_buf is None:
-            raise RuntimeError(f'buffer "{buffer_name}" was not registered')
-
-        if policy == "resize" or registered_buf.numel() == 0:
-            registered_buf.resize_(new_size)
-
-    elif policy == "register":
-        if registered_buf is not None:
-            raise RuntimeError(f'buffer "{buffer_name}" was already registered')
-
-        module.register_buffer(buffer_name, torch.empty(new_size, dtype=dtype).fill_(0))
-
-    else:
-        raise ValueError(f'Invalid policy "{policy}"')
-
-def update_registered_buffers(
-    module,
-    module_name,
-    buffer_names,
-    state_dict,
-    policy="resize_if_empty",
-    dtype=torch.int,
-):
-    """Update the registered buffers in a module according to the tensors sized
-    in a state_dict.
-
-    (There's no way in torch to directly load a buffer with a dynamic size)
-
-    Args:
-        module (nn.Module): the module
-        module_name (str): module name in the state dict
-        buffer_names (list(str)): list of the buffer names to resize in the module
-        state_dict (dict): the state dict
-        policy (str): Update policy, choose from
-            ('resize_if_empty', 'resize', 'register')
-        dtype (dtype): Type of buffer to be registered (when policy is 'register')
-    """
-    if not module:
-        return
-    valid_buffer_names = [n for n, _ in module.named_buffers()]
-    for buffer_name in buffer_names:
-        if buffer_name not in valid_buffer_names:
-            raise ValueError(f'Invalid buffer name "{buffer_name}"')
-
-    for buffer_name in buffer_names:
-        _update_registered_buffer(
-            module,
-            buffer_name,
-            f"{module_name}.{buffer_name}", 
-            state_dict,
-            policy,
-            dtype,
-        )
+from utils.func import update_registered_buffers, get_scale_table
 
 class MSLIC(CompressionModel):
     
@@ -134,7 +53,7 @@ class MSLIC(CompressionModel):
             for i in range(self.slice_num)
         )
 
-        # self.entropy_bottleneck = EntropyBottleneck(N)
+        self.entropy_bottleneck = EntropyBottleneck(N)
         self.gaussian_conditional = GaussianConditional(None)
     
     def update(self, scale_table=None, force=False):
@@ -152,6 +71,26 @@ class MSLIC(CompressionModel):
             state_dict,
         )
         super().load_state_dict(state_dict)
+
+    def _likelihood(self, inputs, scales, means=None):
+        half = float(0.5)
+        if means is not None:
+            values = inputs - means
+        else:
+            values = inputs
+
+        scales = torch.max(scales, torch.tensor(0.11))
+        values = torch.abs(values)
+        upper = self._standardized_cumulative((half - values) / scales)
+        lower = self._standardized_cumulative((-half - values) / scales)
+        likelihood = upper - lower
+        return likelihood
+
+    def _standardized_cumulative(self, inputs):
+        half = float(0.5)
+        const = float(-(2 ** -0.5))
+        # Using the complementary error function maximizes numerical precision.
+        return half * torch.erfc(const * inputs)
 
     def forward(self, x):
         # Multi-Scales-Extractor
@@ -203,45 +142,35 @@ class MSLIC(CompressionModel):
         x_hat_ms_l2 = self.g_s_level_2(y_hat_ms[1])
         x_hat_ms_l1 = self.g_s_level_1(y_hat_ms[2])
 
-        x_hat = MultiScaleCombiner(x_hat_ms_l1, x_hat_ms_l2, x_hat_ms_l3)
+        x_hat = self.ms_combiner(x_hat_ms_l1, x_hat_ms_l2, x_hat_ms_l3)
 
         return {
-            "x_rel": x_hat,
+            "x_hat": x_hat,
             "likelihoods": {"y": y_likelihoods, "z": z_likelihoods},
         }
     
-    def _likelihood(self, inputs, scales, means=None):
-        half = float(0.5)
-        if means is not None:
-            values = inputs - means
-        else:
-            values = inputs
-
-        scales = torch.max(scales, torch.tensor(0.11))
-        values = torch.abs(values)
-        upper = self._standardized_cumulative((half - values) / scales)
-        lower = self._standardized_cumulative((-half - values) / scales)
-        likelihood = upper - lower
-        return likelihood
-
-    def _standardized_cumulative(self, inputs):
-        half = float(0.5)
-        const = float(-(2 ** -0.5))
-        # Using the complementary error function maximizes numerical precision.
-        return half * torch.erfc(const * inputs)
-    
     def compress(self, x):
-        y = self.g_a(x)
-        y_shape = y.shape[2:]
+        torch.cuda.synchronize()
+        start_time = time.time()
+
+        # Multi-Scales-Extractor
+        ms_l1, ms_l2, ms_l3 = self.ms_extractor(x)
+
+        y_ms_l1 = self.g_a_level_1(ms_l1)
+        y_ms_l2 = self.g_a_level_2(ms_l2)
+        y_ms_l3 = self.g_a_level_3(ms_l3)
+        y = torch.cat([y_ms_l3, y_ms_l2, y_ms_l1], dim=1)
 
         z = self.h_a(y)
         z_strings = self.entropy_bottleneck.compress(z)
         z_hat = self.entropy_bottleneck.decompress(z_strings, z.size()[-2:])
 
-        latent_scales = self.h_scale_s(z_hat)
-        latent_means = self.h_mean_s(z_hat)
+        # Hyper-Parameters
+        hyper_params = self.h_s(z_hat)
+        hyper_scales, hyper_means = hyper_params.chunk(2, 1)
 
-        y_slices = y.chunk(self.num_slices, 1)
+        y_slices = y.chunk(self.slice_num, 1)
+
         y_hat_slices = []
         y_scales = []
         y_means = []
@@ -256,15 +185,12 @@ class MSLIC(CompressionModel):
         y_strings = []
 
         for slice_index, y_slice in enumerate(y_slices):
-            support_slices = (y_hat_slices if self.max_support_slices < 0 else y_hat_slices[:self.max_support_slices])
+            support_slices = y_hat_slices
+            mean_support = torch.cat([hyper_means] + support_slices, dim=1)
+            mu = self.entropy_means[slice_index](mean_support)
 
-            mean_support = torch.cat([latent_means] + support_slices, dim=1)
-            mu = self.cc_mean_transforms[slice_index](mean_support)
-            mu = mu[:, :, :y_shape[0], :y_shape[1]]
-            
-            scale_support = torch.cat([latent_scales] + support_slices, dim=1)
-            scale = self.cc_scale_transforms[slice_index](scale_support)
-            scale = scale[:, :, :y_shape[0], :y_shape[1]]
+            scale_support = torch.cat([hyper_scales] + support_slices, dim=1)
+            scale = self.entropy_means[slice_index](scale_support)
 
             index = self.gaussian_conditional.build_indexes(scale)
             y_q_slice = self.gaussian_conditional.quantize(y_slice, "symbols", mu)
@@ -275,7 +201,6 @@ class MSLIC(CompressionModel):
 
             lrp_support = torch.cat([mean_support, y_hat_slice], dim=1)
             lrp = self.lrp_transforms[slice_index](lrp_support)
-            lrp = 0.5 * torch.tanh(lrp)
             y_hat_slice += lrp
 
             y_hat_slices.append(y_hat_slice)
@@ -286,34 +211,42 @@ class MSLIC(CompressionModel):
         y_string = encoder.flush()
         y_strings.append(y_string)
 
-        return {"strings": [y_strings, z_strings], "shape": z.size()[-2:]}
+        torch.cuda.synchronize()
+        end_time = time.time()
+
+        cost_time = end_time - start_time
+
+        return {"strings": [y_strings, z_strings], "shape": z.size()[-2:], "cost_time": cost_time}
 
     def decompress(self, strings, shape):
-        z_hat = self.entropy_bottleneck.decompress(strings[1], shape)
-        latent_scales = self.h_scale_s(z_hat)
-        latent_means = self.h_mean_s(z_hat)
+        torch.cuda.synchronize()
+        start_time = time.time()    
 
+        y_strings = strings[0][0]
+        z_strings = strings[1]
+
+        z_hat = self.entropy_bottleneck.decompress(z_strings, shape)
+
+        # Hyper-Parameters
+        hyper_params = self.h_s(z_hat)
+        hyper_scales, hyper_means = hyper_params.chunk(2, 1)
         y_shape = [z_hat.shape[2] * 4, z_hat.shape[3] * 4]
-
-        y_string = strings[0][0]
-
         y_hat_slices = []
+
         cdf = self.gaussian_conditional.quantized_cdf.tolist()
         cdf_lengths = self.gaussian_conditional.cdf_length.reshape(-1).int().tolist()
         offsets = self.gaussian_conditional.offset.reshape(-1).int().tolist()
 
         decoder = RansDecoder()
-        decoder.set_stream(y_string)
+        decoder.set_stream(y_strings)
 
-        for slice_index in range(self.num_slices):
-            support_slices = (y_hat_slices if self.max_support_slices < 0 else y_hat_slices[:self.max_support_slices])
-            mean_support = torch.cat([latent_means] + support_slices, dim=1)
-            mu = self.cc_mean_transforms[slice_index](mean_support)
-            mu = mu[:, :, :y_shape[0], :y_shape[1]]
+        for slice_index in range(self.slice_num):
+            support_slices = y_hat_slices
+            mean_support = torch.cat([hyper_means] + support_slices, dim=1)
+            mu = self.entropy_means[slice_index](mean_support)
 
-            scale_support = torch.cat([latent_scales] + support_slices, dim=1)
-            scale = self.cc_scale_transforms[slice_index](scale_support)
-            scale = scale[:, :, :y_shape[0], :y_shape[1]]
+            scale_support = torch.cat([hyper_scales] + support_slices, dim=1)
+            scale = self.entropy_means[slice_index](scale_support)
 
             index = self.gaussian_conditional.build_indexes(scale)
 
@@ -323,12 +256,24 @@ class MSLIC(CompressionModel):
 
             lrp_support = torch.cat([mean_support, y_hat_slice], dim=1)
             lrp = self.lrp_transforms[slice_index](lrp_support)
-            lrp = 0.5 * torch.tanh(lrp)
             y_hat_slice += lrp
-
             y_hat_slices.append(y_hat_slice)
 
         y_hat = torch.cat(y_hat_slices, dim=1)
-        x_hat = self.g_s(y_hat).clamp_(0, 1)
 
-        return {"x_rel": x_hat}
+        # Multi-Scales-Extractor
+        y_hat_ms = torch.split(y_hat, [48,96,192], dim=1)
+
+        x_hat_ms_l3 = self.g_s_level_3(y_hat_ms[0])
+        x_hat_ms_l2 = self.g_s_level_2(y_hat_ms[1])
+        x_hat_ms_l1 = self.g_s_level_1(y_hat_ms[2])
+
+        x_hat = self.ms_combiner(x_hat_ms_l1, x_hat_ms_l2, x_hat_ms_l3)
+        x_hat = x_hat.clamp_(0, 1)
+
+        torch.cuda.synchronize()
+        end_time = time.time()
+
+        cost_time = end_time - start_time
+
+        return {"x_hat": x_hat, "cost_time": cost_time}
