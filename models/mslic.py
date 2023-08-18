@@ -216,7 +216,11 @@ class MSLIC(CompressionModel):
 
         cost_time = end_time - start_time
 
-        return {"strings": [y_strings, z_strings], "shape": z.size()[-2:], "cost_time": cost_time}
+        return {
+            "strings": [y_strings, z_strings], 
+            "shape": z.size()[-2:], 
+            "cost_time": cost_time
+        }
 
     def decompress(self, strings, shape):
         torch.cuda.synchronize()
@@ -276,4 +280,7 @@ class MSLIC(CompressionModel):
 
         cost_time = end_time - start_time
 
-        return {"x_hat": x_hat, "cost_time": cost_time}
+        return {
+            "x_hat": x_hat, 
+            "cost_time": cost_time
+        }
