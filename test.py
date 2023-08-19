@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 
 from PIL import ImageFile, Image
 from models.mslic import MSLIC
+from models.mslic_plus import MSLIC_PLUS
 from utils.testing import test_model
 from utils.logger import setup_logger
 
@@ -25,7 +26,7 @@ def main():
     args = test_options()
     config = model_config()
 
-    # os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
 
     torch.backends.cudnn.deterministic = True
 
@@ -36,7 +37,7 @@ def main():
     logger_test = logging.getLogger('test')
 
     test_transforms = transforms.Compose([transforms.ToTensor()])
-    test_dataset = ImageFolder(args.dataset, split="tecnick", transform=test_transforms)
+    test_dataset = ImageFolder(args.dataset, split="kodak", transform=test_transforms)
 
     device = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 
@@ -51,6 +52,7 @@ def main():
     device = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 
     net = MSLIC(config=config)
+    # net = MSLIC_PLUS(config=config)
     net = net.to(device)
     checkpoint = torch.load(args.checkpoint)
 
