@@ -99,7 +99,12 @@ def preprocessing(imgdir, savedir):
         raise RuntimeError(f'Invalid directory "{imgdir}"')
 
     img_paths = collect_images(imgdir)
+    idx = 0
+    print('==========================')
+    print('=========Add Noise========')
+    print('==========================')
     for imgpath in img_paths:
+        idx += 1
         img = cv2.imread(imgpath)
         img = np.array((img)).astype(('float64'))
         height, width, channel = img.shape
@@ -111,6 +116,7 @@ def preprocessing(imgdir, savedir):
             img = cv2.resize(img, dsize=((int(width//2), int(height//2))), interpolation=cv2.INTER_CUBIC)
         name = os.path.splitext(os.path.basename(imgpath))[0]
         cv2.imwrite(os.path.join(savedir, name + '.png'), img)
+        print(f'exec {idx:04d} -> ' + name + '.png')
 
 def select_n_images(imgdir, savedir, n):
     """
@@ -142,9 +148,15 @@ def select_n_images(imgdir, savedir, n):
         if len(sizepath)>n:
             sizepath.pop(0)
             namepath.pop(0)
+    idx = 0
+    print('==========================')
+    print('========Select Pic========')
+    print('==========================')
     for path in namepath:
+        idx += 1
         imgname = os.path.basename(path)
         shutil.copyfile(path, os.path.join(savedir, imgname))
+        print(f'select {idx:04d} -> ' + imgname)
 
 
 if __name__ == '__main__':
