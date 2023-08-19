@@ -21,6 +21,7 @@ from utils.loss import RateDistortionLoss
 from config.args import train_options
 from config.config import model_config
 from models.mslic import MSLIC
+from models.mslic_plus import MSLIC_PLUS
 
 def main():
     torch.backends.cudnn.benchmark = True
@@ -84,6 +85,7 @@ def main():
     )
 
     net = MSLIC(config=config)
+    # net = MSLIC_PLUS(config=config)
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
     net = net.to(device)
