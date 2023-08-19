@@ -117,11 +117,11 @@ class CustomDataParallel(nn.DataParallel):
 
 
 def save_checkpoint(state, is_best, epoch, save_path):
-    torch.save(state, save_path + "checkpoint_latest.pth.tar")
+    torch.save(state, save_path + "/checkpoint_latest.pth.tar")
     if epoch % 20 == 0:
-        torch.save(state, save_path + f"checkpoint_{epoch:03d}.pth.tar")
+        torch.save(state, save_path + f"/checkpoint_{epoch:03d}.pth.tar")
     if is_best:
-        torch.save(state, save_path + "checkpoint_best.pth.tar")
+        torch.save(state, save_path + "/checkpoint_best.pth.tar")
 
 
 def split_data(source_path, destination_path, train_file):

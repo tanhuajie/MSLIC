@@ -6,7 +6,7 @@ from utils.metrics import compute_metrics
 from utils.utils import *
 
 
-def test_one_epoch(epoch, test_dataloader, model, criterion, save_dir, logger_val, tb_logger):
+def test_one_epoch(epoch, test_dataloader, model, criterion, logger_val, tb_logger, save_dir, save_pic):
     model.eval()
     device = next(model.parameters()).device
 
@@ -38,10 +38,11 @@ def test_one_epoch(epoch, test_dataloader, model, criterion, save_dir, logger_va
             psnr.update(p)
             ms_ssim.update(m)
 
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            rec.save(os.path.join(save_dir, '%03d_rec.png' % i))
-            img.save(os.path.join(save_dir, '%03d_gt.png' % i))
+            if save_pic == True:
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                rec.save(os.path.join(save_dir, '%03d_rec.png' % i))
+                img.save(os.path.join(save_dir, '%03d_gt.png' % i))
 
     tb_logger.add_scalar('{}'.format('[val]: loss'), loss.avg, epoch + 1)
     tb_logger.add_scalar('{}'.format('[val]: bpp_loss'), bpp_loss.avg, epoch + 1)

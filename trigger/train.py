@@ -15,7 +15,7 @@ from PIL import ImageFile, Image
 from utils.logger import setup_logger
 from utils.utils import CustomDataParallel, save_checkpoint
 from utils.optimizers import configure_optimizers
-from utils.training import train_one_epoch, train_one_epoch_ddp
+from utils.training import train_one_epoch
 from utils.testing import test_one_epoch
 from utils.loss import RateDistortionLoss
 from config.args import train_options
@@ -60,11 +60,12 @@ def main():
         [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
     )
     test_transforms = transforms.Compose(
-        [transforms.ToTensor()]
+        # [transforms.ToTensor()]
+        [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
     )
 
     train_dataset = ImageFolder(args.dataset, split="train", transform=train_transforms)
-    test_dataset = ImageFolder(args.dataset, split="kodak", transform=test_transforms)
+    test_dataset = ImageFolder(args.dataset, split="test", transform=test_transforms)
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -83,12 +84,12 @@ def main():
     )
 
     net = MSLIC(config=config)
-    net = torch.compile(net)
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
     net = net.to(device)
+
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[80, 100], gamma=0.1)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[400, 450], gamma=0.1)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
@@ -131,7 +132,8 @@ def main():
         )
 
         save_dir = os.path.join('./experiments', args.experiment, 'val_images', '%03d' % (epoch + 1))
-        loss = test_one_epoch(epoch, test_dataloader, net, criterion, save_dir, logger_val, tb_logger)
+        save_pic = False
+        loss = test_one_epoch(epoch, test_dataloader, net, criterion, logger_val, tb_logger, save_dir, save_pic)
 
         lr_scheduler.step()
         is_best = loss < best_loss

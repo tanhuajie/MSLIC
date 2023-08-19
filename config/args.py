@@ -96,7 +96,7 @@ def train_options():
     parser.add_argument(
         "--seed",
         type=float,
-        default=42,
+        default=100,
         help="Set random seed for reproducibility"
     )
     parser.add_argument(
@@ -177,11 +177,5 @@ def test_options():
         help="pretrained model path"
     )
     args = parser.parse_args()
-
-    print("==========================================")
-    arg_list = args
-    for arg in vars(arg_list):
-        print(arg, ":", getattr(arg_list, arg))
-    print("==========================================")
 
     return args
