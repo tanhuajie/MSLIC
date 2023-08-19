@@ -53,19 +53,19 @@ def main():
     logger_val = logging.getLogger('val')
     tb_logger = SummaryWriter(log_dir='./tb_logger/' + args.experiment)
 
-    if not os.path.exists(os.path.join('./experiments', args.experiment, 'checkpoints')):
-        os.makedirs(os.path.join('./experiments', args.experiment, 'checkpoints'))
+    # if not os.path.exists(os.path.join('./experiments', args.experiment, 'checkpoints')):
+    #     os.makedirs(os.path.join('./experiments', args.experiment, 'checkpoints'))
 
     train_transforms = transforms.Compose(
         [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
     )
     test_transforms = transforms.Compose(
         # [transforms.ToTensor()]
-        [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
+        [transforms.CenterCrop(args.patch_size), transforms.ToTensor()]
     )
 
     train_dataset = ImageFolder(args.dataset, split="train", transform=train_transforms)
-    test_dataset = ImageFolder(args.dataset, split="test", transform=test_transforms)
+    test_dataset = ImageFolder(args.dataset, split="kodak", transform=test_transforms)
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -89,7 +89,7 @@ def main():
     net = net.to(device)
 
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[400, 450], gamma=0.1)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[400, 475], gamma=0.1)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
@@ -152,7 +152,7 @@ def main():
                 },
                 is_best,
                 epoch + 1,
-                os.path.join('./experiments', args.experiment, 'checkpoints')              
+                os.path.join('./experiments', args.experiment)              
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')

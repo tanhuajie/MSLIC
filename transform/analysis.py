@@ -10,13 +10,16 @@ class AnalysisTransform_L1(nn.Module):
     def __init__(self, InDim=96, N=144, M=192):
         super().__init__()
         self.analysis_transform = nn.Sequential(
-            ResidualBlockWithStride(InDim, N, stride=2),
+            ResidualBlock(InDim, N),
+            ResidualBlock(N, N),
             ResidualBlock(N, N),
             ResidualBlockWithStride(N, N, stride=2),
             ResidualBlock(N, N),
+            ResidualBlock(N, N),
             ResidualBlockWithStride(N, N, stride=2),
             ResidualBlock(N, N),
-            conv3x3(N, M, stride=2)
+            ResidualBlock(N, N),
+            conv3x3(N, M, stride=1)
         )
 
     def forward(self, x):
@@ -28,11 +31,13 @@ class AnalysisTransform_L2(nn.Module):
     def __init__(self, InDim=96, N=96, M=96):
         super().__init__()
         self.analysis_transform = nn.Sequential(
-            ResidualBlockWithStride(InDim, N, stride=2),
+            ResidualBlock(InDim, N),
+            ResidualBlock(N, N),
             ResidualBlock(N, N),
             ResidualBlockWithStride(N, N, stride=2),
             ResidualBlock(N, N),
-            conv3x3(N, M, stride=2)
+            ResidualBlock(N, N),
+            conv3x3(N, M, stride=1)
         )
 
     def forward(self, x):
@@ -44,11 +49,10 @@ class AnalysisTransform_L3(nn.Module):
     def __init__(self, InDim=192, N=96, M=48):
         super().__init__()
         self.analysis_transform = nn.Sequential(
-            ResidualBlockWithStride(InDim, N, stride=2),
+            ResidualBlock(InDim, N),
             ResidualBlock(N, N),
             ResidualBlock(N, N),
-            ResidualBlock(N, N),
-            conv3x3(N, M, stride=2)
+            conv3x3(N, M, stride=1)
         )
 
     def forward(self, x):
