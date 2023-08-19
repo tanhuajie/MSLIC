@@ -82,8 +82,10 @@ def warmup_one_epoch(
         if clip_max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_max_norm)
         optimizer.step()
+
         if epoch < 1:
             lr_scheduler.step()
+        
         aux_loss = model.aux_loss()
         aux_loss.backward()
         aux_optimizer.step()

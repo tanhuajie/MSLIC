@@ -103,7 +103,6 @@ def decompress_one_image(model, stream_path, img_name):
     return x_hat, cost_time
 
 
-
 def test_model(test_dataloader, net, logger_test, save_dir, epoch):
     net.eval()
     device = next(net.parameters()).device
@@ -125,19 +124,14 @@ def test_model(test_dataloader, net, logger_test, save_dir, epoch):
             if W % 64 != 0:
                 pad_w = 64 * (W // 64 + 1) - W
             img_pad = F.pad(img, (0, pad_w, 0, pad_h), mode='constant', value=0)
-            # warmup GPU
-            if i == 0:
-                bpp, enc_time = compress_one_image(model=net, x=img_pad, stream_path=save_dir, H=H, W=W, img_name=str(i))
-            # avoid resolution leakage
-            net.update_resolutions(16, 16)
+
             bpp, enc_time = compress_one_image(model=net, x=img_pad, stream_path=save_dir, H=H, W=W, img_name=str(i))
-            # avoid resolution leakage
-            net.update_resolutions(16, 16)
             x_hat, dec_time = decompress_one_image(model=net, stream_path=save_dir, img_name=str(i))
             rec = torch2img(x_hat)
             img = torch2img(img)
             img.save(os.path.join(save_dir, '%03d_gt.png' % i))
             rec.save(os.path.join(save_dir, '%03d_rec.png' % i))
+
             p, m = compute_metrics(rec, img)
             avg_psnr.update(p)
             avg_ms_ssim.update(m)
