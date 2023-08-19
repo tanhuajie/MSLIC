@@ -11,6 +11,6 @@ python -u train.py -exp mslic_mse_train --dataset ../dataset/ --epochs 500 --lam
 ## Test
 
 ```
-python -u test.py -exp mslic_mse_test --dataset ../dataset/ --checkpoint ./experiences/mslic_mse_train/checkpoint_best.pth.tar
+python -u test.py -exp mslic_mse_test --dataset ../dataset/ --checkpoint ./experiments/mslic_mse_train/checkpoint_best.pth.tar
 ```
 
