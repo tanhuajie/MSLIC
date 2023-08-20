@@ -22,6 +22,7 @@ from config.args import train_options
 from config.config import model_config
 from models.mslic import MSLIC
 from models.mslic_plus import MSLIC_PLUS
+from models.mslic_v2 import MSLIC_V2
 
 def main():
     torch.backends.cudnn.benchmark = True
@@ -86,6 +87,7 @@ def main():
 
     net = MSLIC(config=config)
     # net = MSLIC_PLUS(config=config)
+    # net = MSLIC_V2(config=config)
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
     net = net.to(device)

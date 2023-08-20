@@ -10,8 +10,11 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 
 from PIL import ImageFile, Image
+
 from models.mslic import MSLIC
 from models.mslic_plus import MSLIC_PLUS
+from models.mslic_v2 import MSLIC_V2
+
 from utils.testing import test_model
 from utils.logger import setup_logger
 
@@ -53,6 +56,7 @@ def main():
 
     net = MSLIC(config=config)
     # net = MSLIC_PLUS(config=config)
+    # net = MSLIC_V2(config=config)
     net = net.to(device)
     checkpoint = torch.load(args.checkpoint)
 

@@ -15,7 +15,7 @@ from compressai.models import CompressionModel
 
 from utils.func import update_registered_buffers, get_scale_table
 
-class MSLIC(CompressionModel):
+class MSLIC_V2(CompressionModel):
     
     def __init__(self, N=192, M=336, num_slices=7, **kwargs):
         super().__init__(entropy_bottleneck_channels=N)
