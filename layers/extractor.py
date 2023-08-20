@@ -311,7 +311,7 @@ class MultiScaleCombiner_V2(nn.Module):
         LayerNorm_type = 'WithBias'
     ):
 
-        super(MultiScaleCombiner, self).__init__()
+        super(MultiScaleCombiner_V2, self).__init__()
 
         self.decoder_level3 = nn.Sequential(*[TransformerBlock(dim=int(dim*2**2), num_heads=heads[2], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[2])])
 
@@ -325,7 +325,9 @@ class MultiScaleCombiner_V2(nn.Module):
 
         self.output = nn.Sequential(
             Upsample(int(dim*3)),
+            *[TransformerBlock(dim=int(dim*1.5), num_heads=heads[0], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[0])],
             Upsample(int(dim*1.5)),
+            *[TransformerBlock(dim=int(dim*0.75), num_heads=heads[0], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[0]//2)],
             nn.Conv2d(int(dim*0.75), out_channels, kernel_size=3, stride=1, padding=1, bias=bias)
         )
 
