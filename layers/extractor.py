@@ -298,3 +298,50 @@ class MultiScaleCombiner(nn.Module):
         out_dec_level1 = self.output(out_dec_level1)
 
         return out_dec_level1
+    
+
+class MultiScaleCombiner_V2(nn.Module):
+    def __init__(self, 
+        out_channels=3, 
+        dim = 48,
+        num_blocks = [4,6,6], 
+        heads = [1,2,4],
+        ffn_expansion_factor = 2.66,
+        bias = False,
+        LayerNorm_type = 'WithBias'
+    ):
+
+        super(MultiScaleCombiner, self).__init__()
+
+        self.decoder_level3 = nn.Sequential(*[TransformerBlock(dim=int(dim*2**2), num_heads=heads[2], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[2])])
+
+        self.up3_2 = Upsample(int(dim*2**2)) ## From Level 3 to Level 2
+        self.reduce_chan_level2 = nn.Conv2d(int(dim*2**2), int(dim*2**1), kernel_size=1, bias=bias)
+        self.decoder_level2 = nn.Sequential(*[TransformerBlock(dim=int(dim*2**1), num_heads=heads[1], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[1])])
+        
+        self.up2_1 = Upsample(int(dim*2**1))  ## From Level 2 to Level 1  (NO 1x1 conv to reduce channels)
+
+        self.decoder_level1 = nn.Sequential(*[TransformerBlock(dim=int(dim*3), num_heads=heads[0], ffn_expansion_factor=ffn_expansion_factor, bias=bias, LayerNorm_type=LayerNorm_type) for i in range(num_blocks[0])])
+
+        self.output = nn.Sequential(
+            Upsample(int(dim*3)),
+            Upsample(int(dim*1.5)),
+            nn.Conv2d(int(dim*0.75), out_channels, kernel_size=3, stride=1, padding=1, bias=bias)
+        )
+
+    def forward(self, inp_img_l1, inp_img_l2, inp_img_l3):
+
+        out_dec_level3 = self.decoder_level3(inp_img_l3) 
+
+        inp_dec_level2 = self.up3_2(out_dec_level3)
+        inp_dec_level2 = torch.cat([inp_dec_level2, inp_img_l2], 1)
+        inp_dec_level2 = self.reduce_chan_level2(inp_dec_level2)
+        out_dec_level2 = self.decoder_level2(inp_dec_level2) 
+
+        inp_dec_level1 = self.up2_1(out_dec_level2)
+        inp_dec_level1 = torch.cat([inp_dec_level1, inp_img_l1], 1)
+        out_dec_level1 = self.decoder_level1(inp_dec_level1)
+
+        out_dec_level1 = self.output(out_dec_level1)
+
+        return out_dec_level1

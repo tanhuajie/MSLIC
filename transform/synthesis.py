@@ -147,3 +147,56 @@ class HyperSynthesisEX(nn.Module):
     def forward(self, x):
         x = self.increase(x)
         return x
+    
+class SynthesisTransform_L1_V2(nn.Module):
+    def __init__(self, OutDim=96, N=144, M=192):
+        super().__init__()
+        self.synthesis_transform = nn.Sequential(
+            ResidualBlock(M, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            subpel_conv3x3(N, OutDim, 2),
+        )
+
+    def forward(self, x):
+        x = self.synthesis_transform(x)
+
+        return x
+
+
+class SynthesisTransform_L2_V2(nn.Module):
+    def __init__(self, OutDim=96, N=96, M=96):
+        super().__init__()
+        self.synthesis_transform = nn.Sequential(
+            ResidualBlock(M, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            subpel_conv3x3(N, OutDim, 2),
+        )
+
+    def forward(self, x):
+        x = self.synthesis_transform(x)
+
+        return x
+
+
+class SynthesisTransform_L3_V2(nn.Module):
+    def __init__(self, OutDim=192, N=96, M=48):
+        super().__init__()
+        self.synthesis_transform = nn.Sequential(
+            ResidualBlock(M, N),
+            ResidualBlock(N, N),
+            ResidualBlock(N, N),
+            conv3x3(N, OutDim, stride=1),
+        )
+
+    def forward(self, x):
+        x = self.synthesis_transform(x)
+
+        return x
