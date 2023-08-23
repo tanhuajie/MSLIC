@@ -24,8 +24,8 @@ class MSLIC_V2(CompressionModel):
         self.slice_num = num_slices
         self.slice_ch = M // num_slices
 
-        self.ms_extractor = MultiScaleExtractor(dim = 48, num_blocks = [4,6,6,8], heads = [1,2,4,8])
-        self.ms_combiner  = MultiScaleCombiner_V2 (dim = 48, num_blocks = [4,6,6], heads = [1,2,4], extend_blocks = [4,2])
+        self.ms_extractor = MultiScaleExtractor(dim = 48, num_blocks = [2,3,3,4], heads = [1,2,4,8])
+        self.ms_combiner  = MultiScaleCombiner_V2 (dim = 48, num_blocks = [2,3,3], heads = [1,2,4], extend_blocks = [2,4])
 
         self.g_a_level_1 = AnalysisTransform_L1(InDim=96 , N=144, M=192)
         self.g_a_level_2 = AnalysisTransform_L2(InDim=96 , N=96 , M=96 )
