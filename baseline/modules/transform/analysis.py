@@ -108,8 +108,8 @@ class HyperAnalysis_MS(nn.Module):
             nn.GELU(),
             conv3x3(N, N, stride=2),
         )
-        self.shuffle_x2 = nn.Pixelshuffle(2)
-        self.shuffle_x4 = nn.Pixelshuffle(4)
+        self.shuffle_x2 = nn.PixelShuffle(2)
+        self.shuffle_x4 = nn.PixelShuffle(4)
 
     def forward(self, x1, x2, x4):
         x2 = self.shuffle_x2(x2)

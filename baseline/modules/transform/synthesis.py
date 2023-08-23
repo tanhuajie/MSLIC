@@ -52,9 +52,14 @@ class HyperSynthesis_MS(nn.Module):
             conv3x3(M * 3 // 2, M * 2),
         )
 
+        self.unshuffle_x2 = nn.PixelUnshuffle(2)
+        self.unshuffle_x4 = nn.PixelUnshuffle(4)
+
     def forward(self, x):
         x = self.increase(x)
         x1, x2, x4 = x.split(self.split_M_lists, dim=1)
+        x2 = self.unshuffle_x2(x2)
+        x4 = self.unshuffle_x4(x4)
         return x1, x2, x4
 
 class SynthesisTransform(nn.Module):

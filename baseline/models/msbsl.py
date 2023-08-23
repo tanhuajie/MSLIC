@@ -138,8 +138,8 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_4
             else:
-                global_attn = self.global_inter_context_x4(torch.cat(y4_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x4(torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
                 params_support = torch.cat([hyper_params_4, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x4[slice_index](params_support)
@@ -161,9 +161,9 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_2
             else:
-                scale_attn = self.multi_scale_context_x4_to_x2(torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x2(torch.cat(y2_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x2(torch.cat(y2_hat_slices, dim=1))
+                scale_attn = self.multi_scale_context_x4_to_x2[slice_index](torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
                 params_support = torch.cat([scale_attn, hyper_params_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x2[slice_index](params_support)
@@ -185,11 +185,11 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_1
             else:
-                scale_attn_1 = self.multi_scale_context_x4_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                scale_attn_2 = self.multi_scale_context_x2_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x1(torch.cat(y1_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x1(torch.cat(y1_hat_slices, dim=1))
-                params_support = torch.cat([scale_attn_1, scale_attn_2, hyper_params_2, global_attn, channel_ctx], dim=1)
+                scale_attn_1 = self.multi_scale_context_x4_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                scale_attn_2 = self.multi_scale_context_x2_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                params_support = torch.cat([hyper_params_1, scale_attn_1, scale_attn_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x1[slice_index](params_support)
             scale, mu = params_entropy.chunk(2, 1)
@@ -260,8 +260,8 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_4
             else:
-                global_attn = self.global_inter_context_x4(torch.cat(y4_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x4(torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
                 params_support = torch.cat([hyper_params_4, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x4[slice_index](params_support)
@@ -284,9 +284,9 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_2
             else:
-                scale_attn = self.multi_scale_context_x4_to_x2(torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x2(torch.cat(y2_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x2(torch.cat(y2_hat_slices, dim=1))
+                scale_attn = self.multi_scale_context_x4_to_x2[slice_index](torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
                 params_support = torch.cat([scale_attn, hyper_params_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x2[slice_index](params_support)
@@ -309,11 +309,11 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_1
             else:
-                scale_attn_1 = self.multi_scale_context_x4_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                scale_attn_2 = self.multi_scale_context_x2_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x1(torch.cat(y1_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x1(torch.cat(y1_hat_slices, dim=1))
-                params_support = torch.cat([scale_attn_1, scale_attn_2, hyper_params_2, global_attn, channel_ctx], dim=1)
+                scale_attn_1 = self.multi_scale_context_x4_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                scale_attn_2 = self.multi_scale_context_x2_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                params_support = torch.cat([hyper_params_1, scale_attn_1, scale_attn_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x1[slice_index](params_support)
             scale, mu = params_entropy.chunk(2, 1)
@@ -372,8 +372,8 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_4
             else:
-                global_attn = self.global_inter_context_x4(torch.cat(y4_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x4(torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x4[slice_index](torch.cat(y4_hat_slices, dim=1))
                 params_support = torch.cat([hyper_params_4, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x4[slice_index](params_support)
@@ -395,9 +395,9 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_2
             else:
-                scale_attn = self.multi_scale_context_x4_to_x2(torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x2(torch.cat(y2_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x2(torch.cat(y2_hat_slices, dim=1))
+                scale_attn = self.multi_scale_context_x4_to_x2[slice_index](torch.cat(y2_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x2[slice_index](torch.cat(y2_hat_slices, dim=1))
                 params_support = torch.cat([scale_attn, hyper_params_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x2[slice_index](params_support)
@@ -419,11 +419,11 @@ class MSLIC_V3(CompressionModel):
             if slice_index == 0:
                 params_support = hyper_params_1
             else:
-                scale_attn_1 = self.multi_scale_context_x4_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
-                scale_attn_2 = self.multi_scale_context_x2_to_x1(torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
-                global_attn = self.global_inter_context_x1(torch.cat(y1_hat_slices, dim=1))
-                channel_ctx = self.channel_context_x1(torch.cat(y1_hat_slices, dim=1))
-                params_support = torch.cat([scale_attn_1, scale_attn_2, hyper_params_2, global_attn, channel_ctx], dim=1)
+                scale_attn_1 = self.multi_scale_context_x4_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y4_hat_slices, dim=1))
+                scale_attn_2 = self.multi_scale_context_x2_to_x1[slice_index](torch.cat(y1_hat_slices, dim=1), torch.cat(y2_hat_slices, dim=1))
+                global_attn = self.global_inter_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                channel_ctx = self.channel_context_x1[slice_index](torch.cat(y1_hat_slices, dim=1))
+                params_support = torch.cat([hyper_params_1, scale_attn_1, scale_attn_2, global_attn, channel_ctx], dim=1)
 
             params_entropy = self.entropy_parameters_x1[slice_index](params_support)
             scale, mu = params_entropy.chunk(2, 1)
