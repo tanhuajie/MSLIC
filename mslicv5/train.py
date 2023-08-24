@@ -83,16 +83,12 @@ def main():
     )
 
     net = MSLIC_V5(config=config)
-    # net = MSLIC_V3(config=config)
-    # net = BaseLine(config=config)
-    # net = MLICPlusPlus(config=config)
 
-    # net = torch.compile(net)
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[450, 500], gamma=0.1)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1800, 1950], gamma=0.1)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:

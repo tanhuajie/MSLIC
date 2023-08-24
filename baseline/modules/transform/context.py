@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
 from einops import rearrange
 from modules.layers import MLP, build_position_index
-from modules.layers import conv, deconv
+from compressai.layers import subpel_conv3x3, conv3x3
 from utils.ckbd import *
 
 
@@ -144,6 +144,42 @@ class ChannelContext_MS(nn.Module):
             nn.Conv2d(in_dim*2, in_dim*3//2, kernel_size=3, stride=1, padding=1),
             nn.GELU(),
             nn.Conv2d(in_dim*3//2, out_dim, kernel_size=3, stride=1, padding=1)
+        )
+
+    def forward(self, channel_params):
+        
+        channel_params = self.fushion(channel_params)
+
+        return channel_params
+
+class ScaleX2Context_MS(nn.Module):
+    def __init__(self, in_dim, out_dim) -> None:
+        super().__init__()
+        self.fushion = nn.Sequential(
+            conv3x3(in_dim, in_dim*2),
+            nn.GELU(),
+            subpel_conv3x3(in_dim*2, in_dim, 2),
+            nn.GELU(),
+            conv3x3(in_dim, out_dim),
+        )
+
+    def forward(self, channel_params):
+        
+        channel_params = self.fushion(channel_params)
+
+        return channel_params
+    
+class ScaleX4Context_MS(nn.Module):
+    def __init__(self, in_dim, out_dim) -> None:
+        super().__init__()
+        self.fushion = nn.Sequential(
+            conv3x3(in_dim, in_dim*2),
+            nn.GELU(),
+            subpel_conv3x3(in_dim*2, in_dim, 2),
+            nn.GELU(),
+            subpel_conv3x3(in_dim, in_dim//2, 2),
+            nn.GELU(),
+            conv3x3(in_dim//2, out_dim),
         )
 
     def forward(self, channel_params):
