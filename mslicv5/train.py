@@ -60,7 +60,7 @@ def main():
         [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
     )
     test_transforms = transforms.Compose(
-        [transforms.CenterCrop(args.patch_size), transforms.ToTensor()]
+        [transforms.CenterCrop(args.patch_size_test), transforms.ToTensor()]
     )
 
     train_dataset = ImageFolder(args.dataset, split="train", transform=train_transforms)

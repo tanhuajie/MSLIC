@@ -78,6 +78,13 @@ def train_options():
         help="Size of the patches to be cropped (default: %(default)s)",
     )
     parser.add_argument(
+        "--patch-size-test",
+        type=int,
+        nargs=2,
+        default=(512, 512),
+        help="Size of the patches to be cropped (default: %(default)s)",
+    )
+    parser.add_argument(
         "--gpu_id",
         type=int,
         default=0,

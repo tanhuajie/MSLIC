@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import time
-from compressai.models import CompressionModel, GaussianConditional
+from compressai.models import CompressionModel
+from compressai.entropy_models import GaussianConditional
 from compressai.ops import ste_round
 from compressai.ans import BufferedRansEncoder, RansDecoder
 from utils.func import update_registered_buffers, get_scale_table
@@ -36,20 +37,6 @@ class MSLIC_V5(CompressionModel):
 
         # Gussian Conditional
         self.gaussian_conditional = GaussianConditional(None)
-
-        # # Global Inter Attention
-        # self.global_inter_context_x1 = nn.ModuleList(
-        #     LinearGlobalInterContext(dim=slice_ch * i, out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
-        #     for i in range(slice_num[0])
-        # )
-        # self.global_inter_context_x2 = nn.ModuleList(
-        #     LinearGlobalInterContext(dim=slice_ch * i, out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
-        #     for i in range(slice_num[1])
-        # )
-        # self.global_inter_context_x4 = nn.ModuleList(
-        #     LinearGlobalInterContext(dim=slice_ch * i, out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
-        #     for i in range(slice_num[2])
-        # )
 
         # Channel Context
         self.channel_context_x1 = nn.ModuleList(
