@@ -386,7 +386,7 @@ class MSLIC_V3(CompressionModel):
             y_hat_slice = self.gaussian_conditional.dequantize(rv, mu)
 
             lrp_support = torch.cat([hyper_means_4] + y4_hat_slices + [y_hat_slice], dim=1)
-            lrp = self.lrp_transforms[slice_index](lrp_support)
+            lrp = self.lrp_transforms_x4[slice_index](lrp_support)
             y_hat_slice += lrp
             y4_hat_slices.append(y_hat_slice)
 
