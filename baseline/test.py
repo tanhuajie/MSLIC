@@ -46,7 +46,8 @@ def main():
 
     device = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 
-    net = MSLIC_V3(config=config)
+    net = MSLIC_V4(config=config)
+    # net = MSLIC_V3(config=config)
     # net = BaseLine(config=config)
     # net = MLICPlusPlus(config=config)
     

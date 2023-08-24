@@ -135,6 +135,23 @@ class ChannelContext(nn.Module):
         return channel_params
 
 
+class ChannelContext_MS(nn.Module):
+    def __init__(self, in_dim, out_dim) -> None:
+        super().__init__()
+        self.fushion = nn.Sequential(
+            nn.Conv2d(in_dim, in_dim*2, kernel_size=3, stride=1, padding=1),
+            nn.GELU(),
+            nn.Conv2d(in_dim*2, in_dim*3//2, kernel_size=3, stride=1, padding=1),
+            nn.GELU(),
+            nn.Conv2d(in_dim*3//2, out_dim, kernel_size=3, stride=1, padding=1)
+        )
+
+    def forward(self, channel_params):
+        
+        channel_params = self.fushion(channel_params)
+
+        return channel_params
+
 class ChannelContextEX(nn.Module):
     def __init__(self, in_dim, out_dim, act=nn.GELU) -> None:
         super().__init__()

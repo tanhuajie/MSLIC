@@ -82,7 +82,8 @@ def main():
         pin_memory=(device == "cuda"),
     )
 
-    net = MSLIC_V3(config=config)
+    net = MSLIC_V4(config=config)
+    # net = MSLIC_V3(config=config)
     # net = BaseLine(config=config)
     # net = MLICPlusPlus(config=config)
 
