@@ -67,26 +67,26 @@ class MSLIC_V4(CompressionModel):
 
         # Multi-Scale Attention
         self.multi_scale_context_x2_to_x1 = nn.ModuleList(
-            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[1], out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
+            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[1], out_dim=slice_ch * i, num_heads=slice_ch * i // 32) if i else None
             for i in range(slice_num[0])
         )
         self.multi_scale_context_x4_to_x1 = nn.ModuleList(
-            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[2], out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
+            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[2], out_dim=slice_ch * i, num_heads=slice_ch * i // 32) if i else None
             for i in range(slice_num[0])
         )
         self.multi_scale_context_x4_to_x2 = nn.ModuleList(
-            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[2], out_dim=slice_ch * 2, num_heads=slice_ch * i // 32) if i else None
+            MultiScaleAttention(dim=slice_ch * i, ms_dim=slice_ch * slice_num[2], out_dim=slice_ch * i, num_heads=slice_ch * i // 32) if i else None
             for i in range(slice_num[1])
         )
 
         # Entropy Parameters
         self.entropy_parameters_x1 = nn.ModuleList(
-            EntropyParameters(in_dim=slice_ch * slice_num[0] * 2 + slice_ch * (i + 4), out_dim=slice_ch * 2)
+            EntropyParameters(in_dim=slice_ch * slice_num[0] * 2 + slice_ch * (i + i * 2), out_dim=slice_ch * 2)
             if i else EntropyParameters(in_dim=slice_ch * slice_num[0] * 2, out_dim=slice_ch * 2)
             for i in range(slice_num[0])
         )
         self.entropy_parameters_x2 = nn.ModuleList(
-            EntropyParameters(in_dim=slice_ch * slice_num[1] * 2 + slice_ch * (i + 2), out_dim=slice_ch * 2)
+            EntropyParameters(in_dim=slice_ch * slice_num[1] * 2 + slice_ch * (i + i), out_dim=slice_ch * 2)
             if i else EntropyParameters(in_dim=slice_ch * slice_num[1] * 2, out_dim=slice_ch * 2)
             for i in range(slice_num[1])
         )

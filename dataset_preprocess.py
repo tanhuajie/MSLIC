@@ -112,13 +112,13 @@ def preprocessing(imgdir, savedir):
         noise = np.random.uniform(0, 1, (height, width, channel)).astype('float32')
         img += noise
         img = img.astype('uint8')
-        if min(width, height)>512:
+        if min(width, height)>960:
             img = cv2.resize(img, dsize=((int(width//2), int(height//2))), interpolation=cv2.INTER_CUBIC)
         name = os.path.splitext(os.path.basename(imgpath))[0]
         cv2.imwrite(os.path.join(savedir, name + '.png'), img)
         print(f'exec {idx:04d} -> ' + name + '.png')
 
-def select_n_images(imgdir, savedir, n):
+def select_n_images(imgdir, savedir, n, minsize):
     """
     :param imgdir: input image dir
     :param savedir: seleted image savingdir
@@ -141,13 +141,14 @@ def select_n_images(imgdir, savedir, n):
     namepath = []
     for imgpath in img_paths:
         width, height = imagesize.get(imgpath)
-        size = width*height
-        loc = bisect.bisect_left(sizepath, size)
-        sizepath.insert(loc, size)
-        namepath.insert(loc, imgpath)
-        if len(sizepath)>n:
-            sizepath.pop(0)
-            namepath.pop(0)
+        if min(width, height)>=minsize:
+            size = width*height
+            loc = bisect.bisect_left(sizepath, size)
+            sizepath.insert(loc, size)
+            namepath.insert(loc, imgpath)
+            if len(sizepath)>n:
+                sizepath.pop(0)
+                namepath.pop(0)
     idx = 0
     print('==========================')
     print('========Select Pic========')
@@ -163,5 +164,5 @@ if __name__ == '__main__':
     inputimagedir = './ImageNet'   ## original image dataset
     tmpdir = './tmp'               ## temporary image folder
     savedir = './train_dataset'    ## preprocessed image folder
-    select_n_images(inputimagedir, tmpdir, 8000) ## select 8000 images from ImageNet training dataset, and all image from CLIC training
+    select_n_images(inputimagedir, tmpdir, 8000, 480) ## select 8000 images from ImageNet training dataset (larger than 480*480, and the 8000th largest images) 
     preprocessing(tmpdir, savedir)
