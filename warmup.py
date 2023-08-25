@@ -36,7 +36,6 @@ def main():
     device = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 
     if args.seed is not None:
-        # seed = 100 * random.random()
         seed = args.seed
         torch.manual_seed(seed)
         random.seed(seed)
@@ -60,7 +59,7 @@ def main():
         [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
     )
     test_transforms = transforms.Compose(
-        [transforms.ToTensor()]
+        [transforms.CenterCrop(args.patch_size_test), transforms.ToTensor()]
     )
 
     train_dataset = ImageFolder(args.dataset, split="train", transform=train_transforms)
@@ -89,8 +88,8 @@ def main():
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
     # lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-    warmup_steps = len(train_dataloader) * 1
-    total_steps = len(train_dataloader) * 150
+    warmup_steps = len(train_dataloader) * 5
+    total_steps = len(train_dataloader) * 200
     lr_scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
@@ -113,10 +112,6 @@ def main():
         best_loss = 1e10
         current_step = 0
 
-    # start_epoch = 0
-    # best_loss = 1e10
-    # current_step = 0
-
     logger_train.info(args)
     logger_train.info(config)
     logger_train.info(net)
@@ -138,7 +133,8 @@ def main():
         )
 
         save_dir = os.path.join('./experiments', args.experiment, 'val_images', '%03d' % (epoch + 1))
-        loss = test_one_epoch(epoch, test_dataloader, net, criterion, save_dir, logger_val, tb_logger)
+        save_pic = False
+        loss = test_one_epoch(epoch, test_dataloader, net, criterion, logger_val, tb_logger, save_dir, save_pic)
 
         is_best = loss < best_loss
         best_loss = min(loss, best_loss)
@@ -155,7 +151,9 @@ def main():
                     "lr_scheduler": lr_scheduler.state_dict(),
                 },
                 is_best,
-                os.path.join('./experiments', args.experiment, 'checkpoints', "checkpoint_%03d.pth.tar" % (epoch + 1))
+                epoch + 1,
+                os.path.join('./experiments', args.experiment),
+                5
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')

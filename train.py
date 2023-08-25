@@ -88,7 +88,7 @@ def main():
         net = CustomDataParallel(net)
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1800, 1950], gamma=0.1)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 180, 190], gamma=0.33)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
@@ -97,8 +97,8 @@ def main():
         net.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         aux_optimizer.load_state_dict(checkpoint['aux_optimizer'])
-        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-        # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[450,550], gamma=0.1)
+        # lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 180, 190], gamma=0.33)
         # lr_scheduler._step_count = checkpoint['lr_scheduler']['_step_count']
         # lr_scheduler.last_epoch = checkpoint['lr_scheduler']['last_epoch']
         # print(lr_scheduler.state_dict())
@@ -152,7 +152,8 @@ def main():
                 },
                 is_best,
                 epoch + 1,
-                os.path.join('./experiments', args.experiment)
+                os.path.join('./experiments', args.experiment),
+                10
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')

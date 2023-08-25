@@ -22,7 +22,7 @@ def train_options():
     parser.add_argument(
         "-e",
         "--epochs",
-        default=2000,
+        default=200,
         type=int,
         help="Number of epochs (default: %(default)s)",
     )

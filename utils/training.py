@@ -82,7 +82,7 @@ def warmup_one_epoch(
         if clip_max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_max_norm)
         optimizer.step()
-        if epoch < 1:
+        if epoch < 5:
             lr_scheduler.step()
         aux_loss = model.aux_loss()
         aux_loss.backward()
@@ -102,7 +102,7 @@ def warmup_one_epoch(
         if i % 100 == 0:
             if out_criterion["ms_ssim_loss"] is None:
                 logger_train.info(
-                    f"Train epoch {epoch}: ["
+                    f"Warmup epoch {epoch}: ["
                     f"{i*len(d):5d}/{len(train_dataloader.dataset)}"
                     f" ({100. * i / len(train_dataloader):.0f}%)] "
                     f'Lr: {optimizer.param_groups[0]["lr"]:.6f} | '
@@ -113,7 +113,7 @@ def warmup_one_epoch(
                 )
             else:
                 logger_train.info(
-                    f"Train epoch {epoch}: ["
+                    f"Warmup epoch {epoch}: ["
                     f"{i*len(d):5d}/{len(train_dataloader.dataset)}"
                     f" ({100. * i / len(train_dataloader):.0f}%)] "
                     f'Lr: {optimizer.param_groups[0]["lr"]:.6f} | '
