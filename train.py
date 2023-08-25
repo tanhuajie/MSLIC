@@ -153,7 +153,7 @@ def main():
                 is_best,
                 epoch + 1,
                 os.path.join('./experiments', args.experiment),
-                10
+                20
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')

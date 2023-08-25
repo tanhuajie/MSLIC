@@ -3,20 +3,20 @@
 Multi-Scale-Learned-Image-Compression-V5
 
 
-## Warmup
+## Warmup (NVIDIA GeForce RTX 4090)
 
 ```
-python -u warmup.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 8
+python -u warmup.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 16
 ```
 
-## Train
+## Train (NVIDIA GeForce RTX 4090)
 
 ```
-python -u train.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 8
+python -u train.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 16
 ```
 
 ```
-python -u train.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 8 --checkpoint ./experiments/mslicv5_mse_train/checkpoint_005.pth.tar
+python -u train.py -exp mslicv5_mse_train --dataset ../autodl-tmp/dataset/ --epochs 200 --lambda 0.035 --metrics mse  --seed 42 --batch-size 16 --checkpoint ./experiments/mslicv5_mse_train/checkpoint_005.pth.tar
 ```
 
 ## Test

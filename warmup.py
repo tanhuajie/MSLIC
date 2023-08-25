@@ -52,8 +52,8 @@ def main():
     logger_val = logging.getLogger('val')
     tb_logger = SummaryWriter(log_dir='./tb_logger/' + args.experiment)
 
-    if not os.path.exists(os.path.join('./experiments', args.experiment, 'checkpoints')):
-        os.makedirs(os.path.join('./experiments', args.experiment, 'checkpoints'))
+    # if not os.path.exists(os.path.join('./experiments', args.experiment, 'checkpoints')):
+    #     os.makedirs(os.path.join('./experiments', args.experiment, 'checkpoints'))
 
     train_transforms = transforms.Compose(
         [transforms.RandomCrop(args.patch_size), transforms.ToTensor()]
