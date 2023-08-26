@@ -88,7 +88,7 @@ def main():
         net = CustomDataParallel(net)
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1500, 1800, 1900], gamma=0.33)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[225, 270, 285], gamma=0.3)
     criterion = RateDistortionLoss_MS(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
@@ -98,7 +98,7 @@ def main():
         optimizer.load_state_dict(checkpoint['optimizer'])
         aux_optimizer.load_state_dict(checkpoint['aux_optimizer'])
         # lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1500, 1800, 1900], gamma=0.33)
+        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[220, 265, 280], gamma=0.3)
         # lr_scheduler._step_count = checkpoint['lr_scheduler']['_step_count']
         # lr_scheduler.last_epoch = checkpoint['lr_scheduler']['last_epoch']
         # print(lr_scheduler.state_dict())

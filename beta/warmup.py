@@ -89,7 +89,7 @@ def main():
     optimizer, aux_optimizer = configure_optimizers(net, args)
     # lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
     warmup_steps = len(train_dataloader) * 5
-    total_steps = len(train_dataloader) * 2000
+    total_steps = len(train_dataloader) * 300
     lr_scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
     criterion = RateDistortionLoss_MS(lmbda=args.lmbda, metrics=args.metrics)
 
