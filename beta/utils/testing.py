@@ -90,16 +90,28 @@ def test_one_epoch(epoch, test_dataloader, model, criterion, logger_val, tb_logg
             f"Bpp loss: {bpp_loss.avg:.4f} | "
             f"Aux loss: {aux_loss.avg:.2f} | "
             f"PSNR: {psnr.avg:.6f} | "
-            f"MS-SSIM: {ms_ssim.avg:.6f} | "
+            f"MS-SSIM: {ms_ssim.avg:.6f}"
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
             f"DS1 loss: {mse_loss_ds1.avg:.6f} | "
             f"DS2 loss: {mse_loss_ds2.avg:.6f} | "
             f"DS4 loss: {mse_loss_ds4.avg:.6f} | "
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
+            f"PSNR_DS1: {psnr.avg:.6f} | "
             f"PSNR_DS2: {psnr_ds2.avg:.6f} | "
             f"PSNR_DS4: {psnr_ds4.avg:.6f} | "
-            f"MS-SSIM_DS2: {ms_ssim_ds2.avg:.6f} | "
-            f"MS-SSIM_DS4: {ms_ssim_ds4.avg:.6f} | "
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
+            f"SSIM_DS1: {ms_ssim.avg:.6f} | "
+            f"SSIM_DS2: {ms_ssim_ds2.avg:.6f} | "
+            f"SSIM_DS4: {ms_ssim_ds4.avg:.6f} | "
         )
         tb_logger.add_scalar('{}'.format('[val]: mse_loss'), mse_loss.avg, epoch + 1)
+
     if out_criterion["ms_ssim_loss"] is not None:
         logger_val.info(
             f"Test epoch {epoch}: Average losses: "
@@ -109,13 +121,24 @@ def test_one_epoch(epoch, test_dataloader, model, criterion, logger_val, tb_logg
             f"Aux loss: {aux_loss.avg:.2f} | "
             f"PSNR: {psnr.avg:.6f} | "
             f"MS-SSIM: {ms_ssim.avg:.6f} | "
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
             f"DS1 loss: {ms_ssim_loss_ds1.avg:.6f} | "
             f"DS2 loss: {ms_ssim_loss_ds2.avg:.6f} | "
             f"DS4 loss: {ms_ssim_loss_ds4.avg:.6f} | "
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
+            f"PSNR_DS1: {psnr.avg:.6f} | "
             f"PSNR_DS2: {psnr_ds2.avg:.6f} | "
             f"PSNR_DS4: {psnr_ds4.avg:.6f} | "
-            f"MS-SSIM_DS2: {ms_ssim_ds2.avg:.6f} | "
-            f"MS-SSIM_DS4: {ms_ssim_ds4.avg:.6f} | "
+        )
+        logger_val.info(
+            f"Test epoch {epoch}: Average losses: "
+            f"SSIM_DS1: {ms_ssim.avg:.6f} | "
+            f"SSIM_DS2: {ms_ssim_ds2.avg:.6f} | "
+            f"SSIM_DS4: {ms_ssim_ds4.avg:.6f} | "
         )
         tb_logger.add_scalar('{}'.format('[val]: ms_ssim_loss'), ms_ssim_loss.avg, epoch + 1)
 
