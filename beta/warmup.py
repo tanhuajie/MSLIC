@@ -17,7 +17,7 @@ from utils.utils import CustomDataParallel, save_checkpoint
 from utils.optimizers import configure_optimizers
 from utils.training import warmup_one_epoch
 from utils.testing import test_one_epoch
-from loss.rd_loss import RateDistortionLoss
+from loss.rd_loss import RateDistortionLoss_MS
 from config.args import train_options
 from config.config import model_config
 from models import *
@@ -81,7 +81,7 @@ def main():
         pin_memory=(device == "cuda"),
     )
 
-    net = MSLIC_V5(config=config)
+    net = MSLIC_V6(config=config)
  
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
@@ -91,7 +91,7 @@ def main():
     warmup_steps = len(train_dataloader) * 5
     total_steps = len(train_dataloader) * 2000
     lr_scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
-    criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
+    criterion = RateDistortionLoss_MS(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
         checkpoint = torch.load(args.checkpoint)

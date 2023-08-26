@@ -10,14 +10,13 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from transformers import get_linear_schedule_with_warmup
 from compressai.datasets import ImageFolder
 from utils.logger import setup_logger
 from utils.utils import CustomDataParallel, save_checkpoint
 from utils.optimizers import configure_optimizers
-from utils.training import warmup_one_epoch
+from utils.training import train_one_epoch
 from utils.testing import test_one_epoch
-from loss.rd_loss import RateDistortionLoss
+from loss.rd_loss import RateDistortionLoss_MS
 from config.args import train_options
 from config.config import model_config
 from models import *
@@ -37,8 +36,10 @@ def main():
 
     if args.seed is not None:
         seed = args.seed
-        torch.manual_seed(seed)
-        random.seed(seed)
+    else:
+        seed = 100 * random.random()
+    torch.manual_seed(seed)
+    random.seed(seed)
 
     if not os.path.exists(os.path.join('./experiments', args.experiment)):
         os.makedirs(os.path.join('./experiments', args.experiment))
@@ -81,25 +82,23 @@ def main():
         pin_memory=(device == "cuda"),
     )
 
-    net = MSLIC_V5(config=config)
- 
+    net = MSLIC_V6(config=config)
+
     if args.cuda and torch.cuda.device_count() > 1:
         net = CustomDataParallel(net)
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    # lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-    warmup_steps = len(train_dataloader) * 5
-    total_steps = len(train_dataloader) * 2000
-    lr_scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
-    criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1500, 1800, 1900], gamma=0.33)
+    criterion = RateDistortionLoss_MS(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
         checkpoint = torch.load(args.checkpoint)
-        net.load_state_dict(checkpoint["state_dict"])
+        # new_ckpt = modify_checkpoint(checkpoint['state_dict'])
+        net.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         aux_optimizer.load_state_dict(checkpoint['aux_optimizer'])
-        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-        # lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[450,550], gamma=0.1)
+        # lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1500, 1800, 1900], gamma=0.33)
         # lr_scheduler._step_count = checkpoint['lr_scheduler']['_step_count']
         # lr_scheduler.last_epoch = checkpoint['lr_scheduler']['last_epoch']
         # print(lr_scheduler.state_dict())
@@ -116,9 +115,10 @@ def main():
     logger_train.info(config)
     logger_train.info(net)
     logger_train.info(optimizer)
+    optimizer.param_groups[0]['lr'] = args.learning_rate
     for epoch in range(start_epoch, args.epochs):
         logger_train.info(f"Learning rate: {optimizer.param_groups[0]['lr']}")
-        current_step = warmup_one_epoch(
+        current_step = train_one_epoch(
             net,
             criterion,
             train_dataloader,
@@ -128,14 +128,14 @@ def main():
             args.clip_max_norm,
             logger_train,
             tb_logger,
-            current_step,
-            lr_scheduler
+            current_step
         )
 
         save_dir = os.path.join('./experiments', args.experiment, 'val_images', '%03d' % (epoch + 1))
         save_pic = False
         loss = test_one_epoch(epoch, test_dataloader, net, criterion, logger_val, tb_logger, save_dir, save_pic)
 
+        lr_scheduler.step()
         is_best = loss < best_loss
         best_loss = min(loss, best_loss)
 
@@ -153,7 +153,7 @@ def main():
                 is_best,
                 epoch + 1,
                 os.path.join('./experiments', args.experiment),
-                5
+                20
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')
