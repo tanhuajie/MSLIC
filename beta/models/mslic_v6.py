@@ -29,9 +29,9 @@ class MSLIC_V6(CompressionModel):
         self.slice_ch = slice_ch
         self.slice_num = slice_num
 
-        self.g_a = AnalysisTransform_MS (N=N, CH_S=slice_ch, CH_NUM=slice_num)
-        self.g_s_x4_x2 = SynthesisTransform_X4_X2(N=slice_ch*slice_num[1], M=slice_ch*slice_num[2])
-        self.g_s_x2_x1 = SynthesisTransform_X2_X1(N=slice_ch*slice_num[0], M=slice_ch*slice_num[1])
+        self.msf_g_a = MultiScaleFeatureNet(base_channels=32, in_channels=3, N=N, CH_S=slice_ch, CH_NUM=slice_num)
+        self.g_s_x4_x2 = SynthesisTransform_Upx2(N=slice_ch*slice_num[1], M=slice_ch*slice_num[2], method='Interpolate')
+        self.g_s_x2_x1 = SynthesisTransform_Upx2(N=slice_ch*slice_num[0], M=slice_ch*slice_num[1], method='Interpolate')
         self.g_s = SynthesisTransform(N=N, M=slice_ch*slice_num[0])
 
         self.h_a = HyperAnalysis_MS (N=N, CH_S=slice_ch, CH_NUM=slice_num)
@@ -76,7 +76,7 @@ class MSLIC_V6(CompressionModel):
         self.shuffel_x4 = nn.PixelShuffle(4)
 
     def forward(self, x):
-        y1, y2, y4 = self.g_a(x)
+        y1, y2, y4 = self.msf_g_a(x)
         z = self.h_a(y1, y2, y4)
         _, z_likelihoods = self.entropy_bottleneck(z)
         z_offset = self.entropy_bottleneck._get_medians()
@@ -114,15 +114,16 @@ class MSLIC_V6(CompressionModel):
             y4_hat_slices.append(y_hat_slice)
 
         chn_ctx_x4_to_x2 = self.g_s_x4_x2(torch.cat(y4_hat_slices, dim=1))
+        cur_chn_ctx_x4_to_x2 = chn_ctx_x4_to_x2.detach()
 
         # Scale = 2
         y2_hat_slices = []
         y2_likelihood = []
         for slice_index, y_slice in enumerate(y2_slices):
             if slice_index == 0:
-                params_support = torch.cat([hyper_params_2, chn_ctx_x4_to_x2], dim=1)
+                params_support = torch.cat([hyper_params_2, cur_chn_ctx_x4_to_x2], dim=1)
             else:
-                params_support = torch.cat([hyper_params_2, chn_ctx_x4_to_x2] + y2_hat_slices, dim=1)
+                params_support = torch.cat([hyper_params_2, cur_chn_ctx_x4_to_x2] + y2_hat_slices, dim=1)
 
             params_entropy = self.entropy_parameters_x2[slice_index](params_support)
             scale, mu = params_entropy.chunk(2, 1)
@@ -136,16 +137,17 @@ class MSLIC_V6(CompressionModel):
             y_hat_slice += lrp
             y2_hat_slices.append(y_hat_slice)
 
-        chn_ctx_x2_to_x1 = self.g_s_x2_x1(torch.cat(y2_hat_slices, dim=1) + chn_ctx_x4_to_x2)
+        chn_ctx_x2_to_x1 = self.g_s_x2_x1(torch.cat(y2_hat_slices, dim=1) + cur_chn_ctx_x4_to_x2)
+        cur_chn_ctx_x2_to_x1 = chn_ctx_x2_to_x1
 
         # Scale = 1
         y1_hat_slices = []
         y1_likelihood = []
         for slice_index, y_slice in enumerate(y1_slices):
             if slice_index == 0:
-                params_support = torch.cat([hyper_params_1, chn_ctx_x2_to_x1], dim=1)
+                params_support = torch.cat([hyper_params_1, cur_chn_ctx_x2_to_x1], dim=1)
             else:
-                params_support = torch.cat([hyper_params_1, chn_ctx_x2_to_x1] + y1_hat_slices, dim=1)
+                params_support = torch.cat([hyper_params_1, cur_chn_ctx_x2_to_x1] + y1_hat_slices, dim=1)
 
             params_entropy = self.entropy_parameters_x1[slice_index](params_support)
             scale, mu = params_entropy.chunk(2, 1)
@@ -159,7 +161,7 @@ class MSLIC_V6(CompressionModel):
             y_hat_slice += lrp
             y1_hat_slices.append(y_hat_slice)
 
-        x_hat = self.g_s(torch.cat(y1_hat_slices, dim=1) + chn_ctx_x2_to_x1)
+        x_hat = self.g_s(torch.cat(y1_hat_slices, dim=1) + cur_chn_ctx_x2_to_x1)
         x_hat_ds2 = self.g_s(chn_ctx_x2_to_x1)
         x_hat_ds4 = self.g_s(self.g_s_x2_x1(chn_ctx_x4_to_x2))
 

@@ -29,6 +29,7 @@ class RateDistortionLoss_MS(nn.Module):
             out["mse_loss_ds1"] = self.mse(output["x_hat"], target)
             out["mse_loss_ds2"] = self.mse(output["x_hat_ds2"], target)
             out["mse_loss_ds4"] = self.mse(output["x_hat_ds4"], target)
+            # out["mse_loss"    ] = out["mse_loss_ds1"]
             out["mse_loss"    ] = (out["mse_loss_ds1"] + out["mse_loss_ds2"] * 0.80 + out["mse_loss_ds4"] * 0.64) / (1+0.80+0.64)
             out["ms_ssim_loss_ds1"] = None
             out["ms_ssim_loss_ds2"] = None
@@ -43,6 +44,7 @@ class RateDistortionLoss_MS(nn.Module):
             out["ms_ssim_loss_ds1"] = 1 - ms_ssim(output["x_hat"], target, data_range=1.0)
             out["ms_ssim_loss_ds2"] = 1 - ms_ssim(output["x_hat_ds2"], target, data_range=1.0)
             out["ms_ssim_loss_ds4"] = 1 - ms_ssim(output["x_hat_ds4"], target, data_range=1.0)
+            # out["ms_ssim_loss"    ] = out["ms_ssim_loss_ds1"]
             out["ms_ssim_loss"    ] = (out["ms_ssim_loss_ds1"] + out["ms_ssim_loss_ds2"] * 0.80 + out["ms_ssim_loss_ds4"] * 0.64) / (1+0.80+0.64)
             out["loss"] = self.lmbda * out["ms_ssim_loss"] + out["bpp_loss"]
 

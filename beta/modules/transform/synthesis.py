@@ -80,33 +80,25 @@ class SynthesisTransform(nn.Module):
         x = self.synthesis_transform(x)
 
         return x
-
-class SynthesisTransform_X4_X2(nn.Module):
-    def __init__(self, N, M):
-        super().__init__()
-        self.synthesis_transform = nn.Sequential(
-            ResidualBlock(M, N),
-            ResidualBlockUpsample(N, N, 2),
-            ResidualBlock(N, N)
-        )
-
-    def forward(self, x):
-        x = self.synthesis_transform(x)
-
-        return x
     
-class SynthesisTransform_X2_X1(nn.Module):
-    def __init__(self, N, M):
+class SynthesisTransform_Upx2(nn.Module):
+    def __init__(self, N, M, method=None):
         super().__init__()
-        self.synthesis_transform = nn.Sequential(
-            ResidualBlock(M, N),
-            ResidualBlockUpsample(N, N, 2),
-            ResidualBlock(N, N)
-        )
-
+        self.method = method
+        if method == 'ResblockUpsample':
+            self.synthesis_transform = nn.Sequential(
+                ResidualBlock(M, N),
+                ResidualBlockUpsample(N, N, 2),
+                ResidualBlock(N, N)
+            )
+        elif method == 'Interpolate':
+            self.synthesis_transform = F.interpolate(scale_factor=2, mode='bilinear')
+        else:
+            self.synthesis_transform = None
+    
     def forward(self, x):
-        x = self.synthesis_transform(x)
-
+        if self.method is not None:
+            x = self.synthesis_transform(x)
         return x
     
 class SynthesisTransform_MS(nn.Module):
