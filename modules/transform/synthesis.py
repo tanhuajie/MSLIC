@@ -80,7 +80,48 @@ class SynthesisTransform(nn.Module):
         x = self.synthesis_transform(x)
 
         return x
-    
+
+
+class SynthesisTransform_MS_NotSplit(nn.Module):
+    def __init__(self, N=192, CH_S=32, CH_NUM=[8,8,8]):
+        super().__init__()
+
+        self.synthesis_transform_u4 = nn.Sequential(
+            ResidualBlock(CH_S * CH_NUM[2], N),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2)
+        )
+
+        self.synthesis_transform_u2 = nn.Sequential(
+            ResidualBlock(N + CH_S * CH_NUM[1], 2*N),
+            ResidualBlock(2*N, N),
+            ResidualBlockUpsample(N, N, 2)
+        )
+
+        self.synthesis_transform_u1 = nn.Sequential(
+            ResidualBlock(N + CH_S * CH_NUM[0], 2*N),
+            ResidualBlock(2*N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            subpel_conv3x3(N, 3, 2)
+        )
+
+    def forward(self, x1, x2, x4):
+        x4_hat = self.synthesis_transform_u4(x4)
+
+        x2_cmb = torch.cat([x4_hat, x2], dim=1)
+        x2_hat = self.synthesis_transform_u2(x2_cmb)
+
+        x1_cmb = torch.cat([x2_hat, x1], dim=1)
+        x1_hat = self.synthesis_transform_u1(x1_cmb)
+        
+        return x1_hat
+
+
 class SynthesisTransform_MS(nn.Module):
     def __init__(self, N=192, CH_S=32, CH_NUM=[8,8,8]):
         super().__init__()

@@ -23,6 +23,48 @@ class AnalysisTransform(nn.Module):
         x = self.analysis_transform(x)
 
         return x
+    
+class AnalysisTransform_MS_NotSplit(nn.Module):
+    def __init__(self, N=192, CH_S=32, CH_NUM=[8,8,8]):
+        super().__init__()
+        self.N = N
+        self.CH_S = CH_S
+        self.analysis_transform_d1 = nn.Sequential(
+            ResidualBlockWithStride(3, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+        )
+
+        self.analysis_transform_d2 = nn.Sequential(
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N)
+        )
+
+        self.analysis_transform_d4 = nn.Sequential(
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N)
+        )
+
+        self.ms1 = conv3x3(N, CH_S * CH_NUM[0], stride=2)
+        self.ms2 = conv3x3(N, CH_S * CH_NUM[1], stride=2)
+        self.ms4 = conv3x3(N, CH_S * CH_NUM[2], stride=2)
+
+    def forward(self, x):
+        x1 = self.analysis_transform_d1(x)
+        x2 = self.analysis_transform_d2(x1)
+        x4 = self.analysis_transform_d4(x2)
+
+        x1 = self.ms1(x1)
+        x2 = self.ms2(x2)
+        x4 = self.ms4(x4)
+
+        return x1, x2, x4
+
+
+
 
 class AnalysisTransform_MS(nn.Module):
     def __init__(self, N=192, CH_S=32, CH_NUM=[8,8,8]):

@@ -29,10 +29,10 @@ class MSLIC_V5(CompressionModel):
         self.slice_ch = slice_ch
         self.slice_num = slice_num
 
-        self.g_a = AnalysisTransform_MS (N=N, CH_S=slice_ch, CH_NUM=slice_num)
-        self.g_s = SynthesisTransform_MS(N=N, CH_S=slice_ch, CH_NUM=slice_num)
+        self.g_a = AnalysisTransform_MS_NotSplit(N=N, CH_S=slice_ch, CH_NUM=slice_num)
+        self.g_s = SynthesisTransform_MS_NotSplit(N=N, CH_S=slice_ch, CH_NUM=slice_num)
 
-        self.h_a = HyperAnalysis_MS (N=N, CH_S=slice_ch, CH_NUM=slice_num)
+        self.h_a = HyperAnalysis_MS(N=N, CH_S=slice_ch, CH_NUM=slice_num)
         self.h_s = HyperSynthesis_MS(N=N, CH_S=slice_ch, CH_NUM=slice_num)
 
         # Gussian Conditional
