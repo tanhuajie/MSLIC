@@ -92,14 +92,17 @@ class SynthesisTransform_Upx2(nn.Module):
                 ResidualBlock(N, N)
             )
         elif method == 'Interpolate':
-            self.synthesis_transform = F.interpolate(scale_factor=2, mode='bilinear')
+            self.synthesis_transform = F.interpolate
         else:
             self.synthesis_transform = None
     
     def forward(self, x):
-        if self.method is not None:
+        if self.method == 'ResblockUpsample':
             x = self.synthesis_transform(x)
+        elif self.method == 'Interpolate':
+            x = self.synthesis_transform(x, scale_factor=2, mode='bilinear')
         return x
+    
     
 class SynthesisTransform_MS(nn.Module):
     def __init__(self, N=192, CH_S=32, CH_NUM=[8,8,8]):

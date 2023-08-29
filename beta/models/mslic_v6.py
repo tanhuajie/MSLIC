@@ -138,7 +138,7 @@ class MSLIC_V6(CompressionModel):
             y2_hat_slices.append(y_hat_slice)
 
         chn_ctx_x2_to_x1 = self.g_s_x2_x1(torch.cat(y2_hat_slices, dim=1) + cur_chn_ctx_x4_to_x2)
-        cur_chn_ctx_x2_to_x1 = chn_ctx_x2_to_x1
+        cur_chn_ctx_x2_to_x1 = chn_ctx_x2_to_x1.detach()
 
         # Scale = 1
         y1_hat_slices = []
