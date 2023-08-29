@@ -29,7 +29,7 @@ class MSLIC_V5(CompressionModel):
         self.slice_ch = slice_ch
         self.slice_num = slice_num
 
-        self.g_a = AnalysisTransform_MS_NotSplit(N=N, CH_S=slice_ch, CH_NUM=slice_num)
+        self.msf_g_a = MultiScaleFeatureNet(base_channels=32, in_channels=3, N=N, CH_S=slice_ch, CH_NUM=slice_num)
         self.g_s = SynthesisTransform_MS_NotSplit(N=N, CH_S=slice_ch, CH_NUM=slice_num)
 
         self.h_a = HyperAnalysis_MS(N=N, CH_S=slice_ch, CH_NUM=slice_num)
@@ -107,7 +107,7 @@ class MSLIC_V5(CompressionModel):
         self.shuffel_x4 = nn.PixelShuffle(4)
 
     def forward(self, x):
-        y1, y2, y4 = self.g_a(x)
+        y1, y2, y4 = self.msf_g_a(x)
         z = self.h_a(y1, y2, y4)
         _, z_likelihoods = self.entropy_bottleneck(z)
         z_offset = self.entropy_bottleneck._get_medians()
