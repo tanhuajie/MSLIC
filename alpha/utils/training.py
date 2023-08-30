@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import torch.autograd as autograd
+
 
 def train_one_epoch(
     model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, logger_train, tb_logger, current_step
@@ -19,6 +21,17 @@ def train_one_epoch(
 
         out_criterion = criterion(out_net, d)
         out_criterion["loss"].backward()
+
+        # with autograd.detect_anomaly():
+        #     out_criterion["loss"].backward()
+
+        # for name, param in model.named_parameters():
+        #     if param.grad is not None and torch.isnan(param.grad).any():
+        #         print("nan gradient found")
+        #         print("name:",name)
+        #         print("param:",param.grad)
+        #         raise SystemExit
+
         if clip_max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_max_norm)
         optimizer.step()
