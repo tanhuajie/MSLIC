@@ -30,21 +30,21 @@ class AnalysisTransform_MS_NotSplit(nn.Module):
         self.N = N
         self.CH_S = CH_S
         self.analysis_transform_d1 = nn.Sequential(
-            ResidualBlockWithStride(3, N, stride=2),
+            ResidualBlockWithStrideRBs(3, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
         )
 
         self.analysis_transform_d2 = nn.Sequential(
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N)
         )
 
         self.analysis_transform_d4 = nn.Sequential(
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N)
         )
 

@@ -110,11 +110,11 @@ class MultiScaleFeatureNet(nn.Module):
                 Conv2d(base_channels * 4, base_channels * 4, 3, 1, padding=1))
 
         self.out1 = nn.Sequential(
-            ResidualBlockWithStride(base_channels * 4, N, stride=2),
+            ResidualBlockWithStrideRBs(base_channels * 4, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
             conv3x3(N, CH_S * CH_NUM[2], stride=2)
             )
@@ -123,21 +123,21 @@ class MultiScaleFeatureNet(nn.Module):
         self.inner2 = nn.Conv2d(base_channels * 1, base_channels * 4, 1, bias=True)
 
         self.out2 = nn.Sequential(
-            ResidualBlockWithStride(base_channels * 4, N, stride=2),
+            ResidualBlockWithStrideRBs(base_channels * 4, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
             conv3x3(N, CH_S * CH_NUM[1], stride=2)
             )
         
         self.out3 = nn.Sequential(
-            ResidualBlockWithStride(base_channels * 4, N, stride=2),
+            ResidualBlockWithStrideRBs(base_channels * 4, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
-            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlockWithStrideRBs(N, N, stride=2),
             ResidualBlock(N, N),
             conv3x3(N, CH_S * CH_NUM[0], stride=2)
             )

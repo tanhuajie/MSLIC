@@ -89,23 +89,23 @@ class SynthesisTransform_MS_NotSplit(nn.Module):
         self.synthesis_transform_u4 = nn.Sequential(
             ResidualBlock(CH_S * CH_NUM[2], N),
             ResidualBlock(N, N),
-            ResidualBlockUpsample(N, N, 2)
+            ResidualBlockUpsampleRBs(N, N, 2)
         )
 
         self.synthesis_transform_u2 = nn.Sequential(
             ResidualBlock(N + CH_S * CH_NUM[1], 2*N),
             ResidualBlock(2*N, N),
-            ResidualBlockUpsample(N, N, 2)
+            ResidualBlockUpsampleRBs(N, N, 2)
         )
 
         self.synthesis_transform_u1 = nn.Sequential(
             ResidualBlock(N + CH_S * CH_NUM[0], 2*N),
             ResidualBlock(2*N, N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
             subpel_conv3x3(N, 3, 2)
         )

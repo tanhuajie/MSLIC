@@ -1,6 +1,6 @@
 # MSLIC
 
-Multi-Scale-Learned-Image-Compression-V6(BETA)
+Multi-Scale-Learned-Image-Compression-V6 (BETA)
 
 
 ## Warmup (NVIDIA GeForce RTX 4090)
