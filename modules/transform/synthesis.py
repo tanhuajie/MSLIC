@@ -128,21 +128,21 @@ class SynthesisTransform_MS(nn.Module):
 
         self.synthesis_transform_u4 = nn.Sequential(
             ResidualBlock(CH_S * CH_NUM[2], N//12),
-            ResidualBlockUpsample(N//12, N//12, 2),
+            ResidualBlockUpsampleRBs(N//12, N//12, 2),
         )
 
         self.synthesis_transform_u2 = nn.Sequential(
             ResidualBlock(N//12 + CH_S * CH_NUM[1], N//3),
-            ResidualBlockUpsample(N//3, N//3, 2),
+            ResidualBlockUpsampleRBs(N//3, N//3, 2),
         )
 
         self.synthesis_transform_u1 = nn.Sequential(
             ResidualBlock(N//3 + CH_S * CH_NUM[0], N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
-            ResidualBlockUpsample(N, N, 2),
+            ResidualBlockUpsampleRBs(N, N, 2),
             ResidualBlock(N, N),
             subpel_conv3x3(N, 3, 2),
         )
