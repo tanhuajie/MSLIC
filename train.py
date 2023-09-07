@@ -72,6 +72,7 @@ def main():
         num_workers=args.num_workers,
         shuffle=True,
         pin_memory=(device == "cuda"),
+        drop_last=True,
     )
 
     test_dataloader = DataLoader(
