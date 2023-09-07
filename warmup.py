@@ -88,8 +88,8 @@ def main():
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
     # lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-    warmup_steps = len(train_dataloader) * 5
-    total_steps = len(train_dataloader) * 2000
+    warmup_steps = len(train_dataloader) * 1
+    total_steps = len(train_dataloader) * 160
     lr_scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
@@ -153,7 +153,7 @@ def main():
                 is_best,
                 epoch + 1,
                 os.path.join('./experiments', args.experiment),
-                5
+                1
             )
             if is_best:
                 logger_val.info('best checkpoint saved.')
