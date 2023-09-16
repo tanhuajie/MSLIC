@@ -86,8 +86,8 @@ def train_options():
     )
     parser.add_argument(
         "--gpu_id",
-        type=int,
-        default=0,
+        type=str,
+        default='0',
         help="GPU ID"
     )
     parser.add_argument(
@@ -173,8 +173,8 @@ def test_options():
     )
     parser.add_argument(
         "--gpu_id",
-        type=int,
-        default=0,
+        type=str,
+        default='0',
         help="GPU ID"
     )
     parser.add_argument(

@@ -31,7 +31,7 @@ def main():
     args = train_options()
     config = model_config()
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
     device = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 
     if args.seed is not None:
@@ -85,21 +85,23 @@ def main():
 
     net = MSLIC_V5(config=config)
 
-    if args.cuda and torch.cuda.device_count() > 1:
+    if args.cuda and torch.cuda.device_count() > 1 and args.checkpoint == None:
         net = CustomDataParallel(net)
     net = net.to(device)
     optimizer, aux_optimizer = configure_optimizers(net, args)
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[80, 120, 140], gamma=0.333)
+    lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[240, 360, 380], gamma=0.333)
     criterion = RateDistortionLoss(lmbda=args.lmbda, metrics=args.metrics)
 
     if args.checkpoint != None:
         checkpoint = torch.load(args.checkpoint)
         # new_ckpt = modify_checkpoint(checkpoint['state_dict'])
         net.load_state_dict(checkpoint['state_dict'])
+        if args.cuda and torch.cuda.device_count() > 1:
+            net = CustomDataParallel(net)
         optimizer.load_state_dict(checkpoint['optimizer'])
         aux_optimizer.load_state_dict(checkpoint['aux_optimizer'])
         # lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[80, 120, 140], gamma=0.333)
+        lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[240, 360, 380], gamma=0.333)
         # lr_scheduler._step_count = checkpoint['lr_scheduler']['_step_count']
         # lr_scheduler.last_epoch = checkpoint['lr_scheduler']['last_epoch']
         # print(lr_scheduler.state_dict())

@@ -23,7 +23,7 @@ def main():
     args = test_options()
     config = model_config()
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
 
     torch.backends.cudnn.deterministic = True
 
